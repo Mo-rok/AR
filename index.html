@@ -31,37 +31,31 @@
     </style>
 </head>
 <body>
-    <div id="loading">Наведите камеру на маркер...</div>
+    <div id="loading">Запрос доступа к камере...</div>
     <div id="ar-container"></div>
 
     <script>
         // Инициализация Zappar
-        const manager = new Zappar.WebAR({
-            container: document.getElementById("ar-container"),
-            camera: "back" // или "front" для селфи
-        });
+        const manager = new Zappar.CameraManager();
+        const pipeline = new Zappar.Pipeline();
+        pipeline.register(manager);
+
+        // Создаем трекер для маркера
+        const tracker = new Zappar.ImageTracker();
+        pipeline.register(tracker);
 
         // Загружаем маркер
-        const marker = new Zappar.ImageTracker();
-        marker.loadTarget("marker.png"); // Укажите URL или локальный файл
-        manager.tracker = marker;
+        tracker.loadTarget("marker.png").then(() => {
+            console.log("Маркер загружен");
+        }).catch((e) => {
+            console.error("Ошибка загрузки маркера:", e);
+            document.getElementById("loading").textContent = "Ошибка загрузки маркера!";
+        });
 
         // Загружаем 3D-модель
-        manager.loadGLTF("model.glb").then((model) => {
-            const obj = manager.instantiate(model);
-            obj.position.set(0, 0, 0); // Позиция относительно маркера
-            obj.scale.set(0.5, 0.5, 0.5); // Масштаб модели
-            
-            document.getElementById("loading").style.display = "none";
+        const model = new Zappar.GLTFLoader();
+        model.load("model.glb").then(() => {
+            console.log("Модель загружена");
         }).catch((e) => {
             console.error("Ошибка загрузки модели:", e);
-            document.getElementById("loading").textContent = "Ошибка! Проверьте консоль.";
-        });
-
-        // Запуск AR
-        manager.start().catch(() => {
-            alert("Разрешите доступ к камере!");
-        });
-    </script>
-</body>
-</html>
+            document.getElementById("loading").
